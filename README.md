@@ -34,23 +34,23 @@ optional arguments:
   -h, --help     show this help message and exit
 ```
 
+This is an example:
+```
+python dockq_complex.py example/7URD/relaxed_model_1_multimer_v3_pred_0.pdb example/7URD/ 7URD
+```
+
+All intermediate output files can be found in `_tmp/[pdb_id]`.
+
+
 Note that:
-1. Ground truth chains should be saved in separate pdb files. Each pdb file should be named as '(pdb_id)_(chain_id).pdb', where chain id can be anything with any length, not necessarily consistent with chain id in prediction, such as '7URD_I_am_an_example.pdb'.
+1. Ground truth chains should be saved in separate pdb files. Each pdb file should be named as '(pdb_id)_(chain_id).pdb', where chain id can be anything with any length, not necessarily consistent with chain id in prediction, such as '7URD_I_am_one_chain.pdb' and '7URD_I_am_another_chain.pdb'.
 2. The sequence of ground truth should be the same as that of prediction, with gap residues represented by 'UNK'. You can add 'UNK' gaps for single chain pdb and get `**_no_gap.pdb` in the same directory as your input pdb file by running:
 ```bash
 python add_gap_pdb.py path/to/pdb/to/add/gap sequence_length_of_resulted_pdb
 ```
 
-For example:
-```
-python dockq_complex.py example/7URD/relaxed_model_1_multimer_v3_pred_0.pdb example/7URD/ 7URD
-```
-
-All intermediate files can be found in `_tmp/[pdb_id]`.
-
-
 
 # Reference
-[DockQ: A Quality Measure for Protein-Protein Docking Models](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0161879)
+1. [DockQ: A Quality Measure for Protein-Protein Docking Models](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0161879)
 
-[Protein complex prediction with AlphaFold-Multimer](https://www.biorxiv.org/content/10.1101/2021.10.04.463034v1)
+2. [Protein complex prediction with AlphaFold-Multimer](https://www.biorxiv.org/content/10.1101/2021.10.04.463034v1)
