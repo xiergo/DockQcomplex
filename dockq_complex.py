@@ -298,7 +298,7 @@ def cal_dockq_pdb(pred_pdb, truth_pdb_dir, pdb_id):
 
 
 def main():
-    parser = argparse.ArgumentParser('Calculate DockQ for protein complex')
+    parser = argparse.ArgumentParser(description='Calculate DockQ for protein complex')
     parser.add_argument('pred_pdb', type=str, help='a pdb file containing predicted structures of all chains')
     parser.add_argument('truth_pdb_dir', type=str, help='a directory containing all ground truth pdb files, with each file corresponding to one chain')
     parser.add_argument('pdb_id', type=str, help='PDB id, all files in "truth_pdb_dir" with the pattern "pdb_id***pdb" will be recognized as ground truth pdbs')

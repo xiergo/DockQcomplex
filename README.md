@@ -22,8 +22,13 @@ pip install biopython
 ```
 
 # Usage
+
+Type `python dockq_complex.py -h` to view usage page:
+
 ```
-usage: Calculate DockQ for protein complex [-h] pred_pdb truth_pdb_dir pdb_id
+usage: dockq_complex.py [-h] pred_pdb truth_pdb_dir pdb_id
+
+Calculate DockQ for protein complex
 
 positional arguments:
   pred_pdb       a pdb file containing predicted structures of all chains
