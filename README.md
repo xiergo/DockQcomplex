@@ -3,7 +3,7 @@ Calculate DockQ for multimer, defined as the average of DockQ values for all int
 
 
 # Method
-Each of the predicted chains were greedily assigned to their nearest neighbour of the same sequence in the ground truth, as suggusted in AF-Multimer (refer to AF-Multimer SI Part 7.3.2). Two chains were defined as contacted as long as any heavy atom of one chain being within 5A of any heavy atom of the other chain. All chain pair with contacts were used to calculate DockQ in 'Two chains (Dimer)' mode with the code in (https://github.com/bjornwallner/DockQ). The averaged DockQ value was defined as the final DockQ for the protein complex.
+The predicted chains were assigned to their nearest neighbor of the same sequence in the ground truth in a greedy manner, as suggested in AF-Multimer (please refer to AF-Multimer SI Part 7.3.2). Two chains were considered in contact if any heavy atom of one chain was within 5A of any heavy atom of the other chain. The DockQ was calculated for all chain pairs with contacts in 'Two chains (Dimer)' mode using the code from (https://github.com/bjornwallner/DockQ). The final DockQ for the protein complex was defined as the average DockQ value.
 
 # Installation
 ```bash
