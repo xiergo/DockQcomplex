@@ -35,12 +35,11 @@ optional arguments:
 ```
 
 Note that:
-1. Ground truth chains should be saved in separate pdb files.
+1. Ground truth chains should be saved in separate pdb files. Each pdb file should be named as '(pdb_id)_(chain_id).pdb', where chain id can be anything with any length, not necessarily consistent with chain id in prediction, such as '7URD_I_am_an_example.pdb'.
 2. The sequence of ground truth should be the same as that of prediction, with gap residues represented by 'UNK'. You can add 'UNK' gaps for single chain pdb and get `**_no_gap.pdb` in the same directory as your input pdb file by running:
 ```bash
 python add_gap_pdb.py path/to/pdb/to/add/gap sequence_length_of_resulted_pdb
 ```
-
 
 For example:
 ```
