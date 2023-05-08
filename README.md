@@ -33,11 +33,23 @@ positional arguments:
 optional arguments:
   -h, --help     show this help message and exit
 ```
+
+Note that:
+1. Ground truth chains should be saved in separate pdb files.
+2. The sequence of ground truth should be the same as that of prediction, with gap residues represented by 'UNK'. You can add 'UNK' gaps for single chain pdb and get `**_no_gap.pdb` in the same directory as your input pdb file by running:
+```bash
+python add_gap_pdb.py path/to/pdb/to/add/gap sequence_length_of_resulted_pdb
+```
+
+
 For example:
 ```
 python dockq_complex.py example/7URD/relaxed_model_1_multimer_v3_pred_0.pdb example/7URD/ 7URD
 ```
+
 All intermediate files can be found in `_tmp/[pdb_id]`.
+
+
 
 # Reference
 [DockQ: A Quality Measure for Protein-Protein Docking Models](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0161879)
