@@ -1,4 +1,4 @@
-example/7URD/7URD_H_no_gap.pdb	C
-example/7URD/7URD_A_no_gap.pdb	A
-example/7URD/7URD_B_no_gap.pdb	B
-example/7URD/7URD_L_no_gap.pdb	D
+./example/7URD/7URD_A_no_gap.pdb	A
+./example/7URD/7URD_H_no_gap.pdb	C
+./example/7URD/7URD_L_no_gap.pdb	D
+./example/7URD/7URD_B_no_gap.pdb	B
