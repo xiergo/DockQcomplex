@@ -25,9 +25,20 @@ def parse_chain(chain):
     seq = ''
     cals = []
     heavls = []
+    last_res_idx = None
     for res in chain.get_residues():
         if res.id[0] != ' ':
             continue
+        
+        res_idx = int(res.id[1])
+        if last_res_idx:
+            delta_idx = res_idx - last_res_idx 
+            if delta_idx != 1:
+                seq += 'X' * (delta_idx - 1)
+                for _ in range(delta_idx - 1):
+                    cals.append([0, 0, 0])
+        last_res_idx = res_idx
+        
         resname = THREE_TO_ONE[res.resname] if 'CA' in res else 'X'
         seq += resname
         if resname == 'X':
@@ -189,6 +200,7 @@ def cal_dockq_pdb(pred_pdb, truth_pdb_dir, pdb_id):
     PDB_CHAIN_IDS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789' # 62
 
     truth_pdbs = [i.strip() for i in os.popen(f'find {truth_pdb_dir} -name {pdb_id}*pdb').readlines()]
+    truth_pdbs = [i for i in truth_pdbs if not os.path.samefile(i, pred_pdb)]
     assert len(truth_pdbs) == len(pred.child_list), f'The number of ground truth chains is not equal to that of prediction: {len(truth_pdbs), len(pred.child_list)}'
 
     for i, truth_pdb in enumerate(truth_pdbs):
@@ -219,7 +231,7 @@ def cal_dockq_pdb(pred_pdb, truth_pdb_dir, pdb_id):
     anchor_truth = truth_cids[0]
     
     anchors_pred = list(df.pred_cid[0])
-    masks = [i[1] for i in truth_ca.values()]
+    masks = [truth_ca[i][1] for i in truth_cids]
     x_mean_pred = np.concatenate([np.concatenate([get_mean_pred(i, mask) for i in pred_ca.values()])[:, None] for mask in masks], 1)
     # print(x_mean_pred.shape)
     pm_best = []
@@ -239,7 +251,7 @@ def cal_dockq_pdb(pred_pdb, truth_pdb_dir, pdb_id):
 
 
     match_table = {}
-    for cid_t, cid_p in zip(truth_ca.keys(), np.array(list(pred_ca.keys()))[pm_best]):
+    for cid_t, cid_p in zip(truth_cids, np.array(list(pred_ca.keys()))[pm_best]):
         cids_p = df.pred_cid[df.truth_cid == cid_t].values[0]
         # print(cid_t, cid_p, cids_p)
         # print(cid_p in cids_p)
@@ -301,7 +313,7 @@ def main():
     parser = argparse.ArgumentParser(description='Calculate DockQ for protein complex')
     parser.add_argument('pred_pdb', type=str, help='a pdb file containing predicted structures of all chains')
     parser.add_argument('truth_pdb_dir', type=str, help='a directory containing all ground truth pdb files, with each file corresponding to one chain')
-    parser.add_argument('pdb_id', type=str, help='PDB id, all files in "truth_pdb_dir" with the pattern "pdb_id***pdb" will be recognized as ground truth pdbs')
+    parser.add_argument('pdb_id', type=str, help='PDB id, all files in "truth_pdb_dir" with the pattern "pdb_id***pdb" (excluding pred_pdb) will be recognized as ground truth pdbs')
     args = parser.parse_args()
     dockq = cal_dockq_pdb(args.pred_pdb, args.truth_pdb_dir, args.pdb_id)
     dockq = round(dockq, 5)

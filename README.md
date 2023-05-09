@@ -33,7 +33,7 @@ Calculate DockQ for protein complex
 positional arguments:
   pred_pdb       a pdb file containing predicted structures of all chains
   truth_pdb_dir  a directory containing all ground truth pdb files, with each file corresponding to one chain
-  pdb_id         PDB id, all files in "truth_pdb_dir" with the pattern "pdb_id***pdb" will be recognized as ground truth pdbs
+  pdb_id         PDB id, all files in "truth_pdb_dir" with the pattern "pdb_id***pdb" (excluding pred_pdb) will be recognized as ground truth pdbs
 
 optional arguments:
   -h, --help     show this help message and exit
