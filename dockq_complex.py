@@ -224,7 +224,7 @@ def cal_dockq_pdb(pred_pdb, truth_pdb_dir, pdb_id):
     df['true_seq_len'] = df['mask'].map(np.sum)
     df = df.sort_values(by=['num_chains', 'true_seq_len'], ascending=[True, False])
     print(df)
-    df.pop('mask')
+    df = df[['pred_cid', 'seq_len', 'num_chains', 'truth_cid', 'true_seq_len', 'truth_path', 'pred_seq', 'truth_seq']]
     df.to_csv(f'{tmp_dir}/{pdb_id}_info.tsv', sep='\t', index=False)
 
     truth_cids = df.truth_cid
