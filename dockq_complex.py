@@ -124,12 +124,12 @@ def kabsch_rotation(P, Q):
     return U
 
 
-def get_mean_pred(pred_pos, mask):
-    assert pred_pos.shape[-1] == 3
-    if pred_pos.shape[0] != mask.shape[0]:
+def get_mean_pred(pred_ca_pos, mask, pred_cid, truth_cid, df):
+    assert pred_ca_pos.shape[-1] == 3
+    if pred_cid not in df.pred_cid[df.truth_cid == truth_cid].values[0]:
         return np.array([1e9, 1e9, 1e9]).reshape(1, -1)
     else:
-        return pred_pos[mask].mean(0, keepdims=True)
+        return pred_ca_pos[mask].mean(0, keepdims=True)
 
 
 def find_optimal_permutation(x_mean_pred, x_mean_truth):
@@ -232,7 +232,7 @@ def cal_dockq_pdb(pred_pdb, truth_pdb_dir, pdb_id):
     
     anchors_pred = list(df.pred_cid[0])
     masks = [truth_ca[i][1] for i in truth_cids]
-    x_mean_pred = np.concatenate([np.concatenate([get_mean_pred(i, mask) for i in pred_ca.values()])[:, None] for mask in masks], 1)
+    x_mean_pred = np.concatenate([np.concatenate([get_mean_pred(pred_ca_pos, mask, pred_cid, truth_cid, df) for pred_cid, pred_ca_pos in pred_ca.items()])[:, None] for truth_cid, mask in zip(truth_cids, masks)], 1)
     # print(x_mean_pred.shape)
     pm_best = []
     rmsd_min = 1e9
@@ -299,13 +299,16 @@ def cal_dockq_pdb(pred_pdb, truth_pdb_dir, pdb_id):
             info['truth_j'] = df.truth_path[df.truth_cid == cid_tj].values[0]
             dockqls.append(pd.DataFrame(info, index=[0]))
     
+    if len(dockqls) == 0:
+        print(f'No contact: {pdb_id}')
+        return None
     dockqdf = pd.concat(dockqls, 0)
     cols = ['pdb_id', 'pred_i', 'pred_j', 'DockQ', 'irms', 'Lrms', 'fnat', 'nat_correct', 'nat_total', 'fnonnat', 'nonnat_count', 'model_total', 'chain1', 'chain2', 'len1', 'len2', 'class1', 'class2', 'truth_i', 'truth_j']
     dockqdf = dockqdf[cols]
     print(dockqdf)
     dockqdf.to_csv(f'{tmp_dir}/{pdb_id}_dockq_info.tsv', sep='\t', index=False)
     dockq = dockqdf.DockQ.mean()
-    
+    dockq = round(dockq, 5)
     return dockq
 
 
@@ -316,7 +319,6 @@ def main():
     parser.add_argument('pdb_id', type=str, help='PDB id, all files in "truth_pdb_dir" with the pattern "pdb_id***pdb" (excluding pred_pdb) will be recognized as ground truth pdbs')
     args = parser.parse_args()
     dockq = cal_dockq_pdb(args.pred_pdb, args.truth_pdb_dir, args.pdb_id)
-    dockq = round(dockq, 5)
     print(f'averaged DockQ: {dockq}')
 if __name__ == '__main__':
     main()
