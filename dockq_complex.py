@@ -244,6 +244,7 @@ def cal_dockq_pdb(pred_pdb, truth_pdb_dir, pdb_id):
     masks = [truth_ca[i][1] for i in truth_cids]
     # x_mean_pred: (num_pred_chain, num_truth_chain, 3)
     x_mean_pred = np.concatenate([np.concatenate([get_mean_pred(pred_ca_pos, mask, pred_cid, truth_cid, df) for pred_cid, pred_ca_pos in pred_ca.items()])[:, None] for truth_cid, mask in zip(truth_cids, masks)], 1)
+
     # print(x_mean_pred.shape)
     pm_best = []
     rmsd_min = 1e9
