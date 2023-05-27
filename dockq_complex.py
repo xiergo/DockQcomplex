@@ -56,20 +56,33 @@ def parse_chain(chain):
     return seq, ca_pos, mask, heav_pos
 
 
-def cal_rmsd(x1, x2):
+def cal_rmsd(x1, x2, eps = 1e-6):
     assert x1.shape == x2.shape, (x1.shape, x2.shape)
     assert x1.shape[-1] == 3
-    return np.sqrt(((x1 - x2) ** 2).sum(-1).mean())
+    return np.sqrt(((x1 - x2) ** 2).sum(-1).mean() + eps)
 
-def cal_ca_rmsd_tot(pred_ca, truth_ca, truth_cids, pm):
+def kabsch_rmsd(true_atom_pos, pred_atom_pos):
+    r, x = get_optimal_transform(
+        true_atom_pos,
+        pred_atom_pos
+    )
+    aligned_true_atom_pos = true_atom_pos @ r + x
+    return cal_rmsd(aligned_true_atom_pos, pred_atom_pos)
+
+
+def cal_ca_kabsch_rmsd(pred_ca, truth_ca, truth_cids, pm):
     # truth_ca[chain_id] = [ca_pos, mask, heav_pos]
     # pred_ca[chain.id] = ca_pos
-    rmsd_tot = 0
+    pred_ca_ls = []
+    truth_ca_ls = []
     for truth_cid, pred_idx in zip(truth_cids, pm):
         truth_ca_pos, truth_mask, _ =truth_ca[truth_cid]
         pred_ca_pos = list(pred_ca.values())[pred_idx]
-        rmsd_tot += cal_rmsd(truth_ca_pos[truth_mask], pred_ca_pos[truth_mask])
-    return rmsd_tot
+        truth_ca_ls.append(truth_ca_pos[truth_mask])
+        pred_ca_ls.append(pred_ca_pos[truth_mask])
+        truth_ca_all = np.concatenate(truth_ca_ls)
+        pred_ca_all = np.concatenate(pred_ca_ls)
+    return kabsch_rmsd(truth_ca_all, pred_ca_all)
 
 def get_optimal_transform(src_atoms, tgt_atoms, mask = None):
     assert src_atoms.shape == tgt_atoms.shape, (src_atoms.shape, tgt_atoms.shape)
@@ -256,7 +269,7 @@ def cal_dockq_pdb(pred_pdb, truth_pdb_dir, pdb_id):
         # print(x_mean_truth.shape)
         pm = find_optimal_permutation(x_mean_pred, x_mean_truth)
         # rmsd = cal_rmsd(x_mean_truth, x_mean_pred[pm, range(len(pm))])
-        rmsd = cal_ca_rmsd_tot(pred_ca, truth_ca, truth_cids, pm)
+        rmsd = cal_ca_kabsch_rmsd(pred_ca, truth_ca, truth_cids, pm)
         print(anchor_truth, anchor_pred, pm, rmsd)
         if rmsd < rmsd_min:
             rmsd_min = rmsd
@@ -322,7 +335,8 @@ def cal_dockq_pdb(pred_pdb, truth_pdb_dir, pdb_id):
     dockqdf.to_csv(f'{tmp_dir}/{pdb_id}_dockq_info.tsv', sep='\t', index=False)
     dockq = dockqdf.DockQ.mean()
     dockq = round(dockq, 5)
-    return dockq
+    rmsd = round(rmsd, 5)
+    return dockq, rmsd
 
 
 def main():
@@ -331,7 +345,7 @@ def main():
     parser.add_argument('truth_pdb_dir', type=str, help='a directory containing all ground truth pdb files, with each file corresponding to one chain')
     parser.add_argument('pdb_id', type=str, help='PDB id, all files in "truth_pdb_dir" with the pattern "pdb_id***pdb" (excluding pred_pdb) will be recognized as ground truth pdbs')
     args = parser.parse_args()
-    dockq = cal_dockq_pdb(args.pred_pdb, args.truth_pdb_dir, args.pdb_id)
-    print(f'averaged DockQ: {dockq}')
+    dockq, rmsd = cal_dockq_pdb(args.pred_pdb, args.truth_pdb_dir, args.pdb_id)
+    print(f'RMSD: {rmsd}\nAveraged DockQ: {dockq}')
 if __name__ == '__main__':
     main()
