@@ -201,7 +201,7 @@ def rm_masked_res(chain, mask):
     return chain1
 
 
-def cal_dockq_pdb(pred_pdb_path, truth_pdb_path, pdb_id, key=None, debug_mode=False):
+def cal_dockq_pdb(pred_pdb_path, truth_pdb_path, pdb_id=None, key=None, debug_mode=False):
     # print(pdb_id)
     # pred_pdb_path = f'../output_af2/{pdb_id}/relaxed_model_1_multimer_v3_pred_0.pdb'
     # print(pred_pdb_path)
@@ -275,10 +275,8 @@ def cal_dockq_pdb(pred_pdb_path, truth_pdb_path, pdb_id, key=None, debug_mode=Fa
             truth_ca[chain_id] = [ca_pos, mask, heav_pos]
 
             for i, row in df_pred.iterrows():
-                # if row.seq_len != len(seq):
-                #     print(row.seq_len, row.pred_seq)
-                #     print(len(seq), seq)
-                #     continue
+                if row.seq_len < len(seq):
+                    continue
                 flag_match = True
                 for j, k in zip(row.pred_seq, seq):
                     if not (j == k or k == 'X' or j == 'X'):
