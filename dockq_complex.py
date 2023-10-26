@@ -201,7 +201,7 @@ def rm_masked_res(chain, mask):
     return chain1
 
 
-def cal_dockq_pdb(pred_pdb_path, truth_pdb_path, pdb_id, key=None):
+def cal_dockq_pdb(pred_pdb_path, truth_pdb_path, pdb_id, key=None, debug_mode=False):
     # print(pdb_id)
     # pred_pdb_path = f'../output_af2/{pdb_id}/relaxed_model_1_multimer_v3_pred_0.pdb'
     # print(pred_pdb_path)
@@ -240,7 +240,7 @@ def cal_dockq_pdb(pred_pdb_path, truth_pdb_path, pdb_id, key=None):
             ls.append([''.join(v), len(k), k])
         df_pred = pd.DataFrame(ls, columns=['pred_cid', 'seq_len', 'pred_seq'])
         df_pred['num_chains'] = df_pred.pred_cid.map(len)
-        if DEBUG_MODE:
+        if debug_mode:
             print(df_pred)
 
 
@@ -261,7 +261,7 @@ def cal_dockq_pdb(pred_pdb_path, truth_pdb_path, pdb_id, key=None):
             truth_pdbs = [i for i in truth_pdbs if not os.path.samefile(i, pred_pdb_path)]
             truth_pdbs = [parser.get_structure('truth', i)[0].child_list[0] for i in truth_pdbs]
         
-        if DEBUG_MODE:
+        if debug_mode:
             print(truth_pdbs)
             print(pred.child_list)
         assert len(truth_pdbs) == len(pred.child_list), f'The number of ground truth chains is not equal to that of prediction: {len(truth_pdbs), len(pred.child_list)}'
@@ -289,10 +289,10 @@ def cal_dockq_pdb(pred_pdb_path, truth_pdb_path, pdb_id, key=None):
         df = pd.DataFrame(ls, columns=df_pred.columns.tolist() + ['truth_cid', 'truth_path', 'truth_seq', 'mask']) 
         df['true_seq_len'] = df['mask'].map(np.sum)
         df = df.sort_values(by=['num_chains', 'true_seq_len'], ascending=[True, False])
-        if DEBUG_MODE:
+        if debug_mode:
             print(df)
         df = df[['pred_cid', 'seq_len', 'num_chains', 'truth_cid', 'true_seq_len', 'truth_path', 'pred_seq', 'truth_seq']]
-        if DEBUG_MODE:
+        if debug_mode:
             df.to_csv(f'{tmp_dir}/{pdb_id}_info.tsv', sep='\t', index=False)
 
         truth_cids = df.truth_cid
@@ -328,7 +328,7 @@ def cal_dockq_pdb(pred_pdb_path, truth_pdb_path, pdb_id, key=None):
             # print(cid_p in cids_p)
             assert cid_p in cids_p, (cid_p, cids_p)
             match_table[cid_t] = cid_p
-        if DEBUG_MODE:
+        if debug_mode:
             with open(f'{tmp_dir}/{pdb_id}_match_table.tsv', 'w') as f:
                 f.writelines([f'{df.truth_path[df.truth_cid == k].values[0]}\t{v}\n' for k, v in match_table.items()])
 
@@ -377,7 +377,7 @@ def cal_dockq_pdb(pred_pdb_path, truth_pdb_path, pdb_id, key=None):
         dockqdf = pd.concat(dockqls, axis=0)
         cols = ['pdb_id', 'pred_i', 'pred_j', 'DockQ', 'irms', 'Lrms', 'fnat', 'nat_correct', 'nat_total', 'fnonnat', 'nonnat_count', 'model_total', 'chain1', 'chain2', 'len1', 'len2', 'class1', 'class2', 'truth_i', 'truth_j']
         dockqdf = dockqdf[cols]
-        if DEBUG_MODE:
+        if debug_mode:
             print(dockqdf)
             dockqdf.to_csv(f'{tmp_dir}/{pdb_id}_dockq_info.tsv', sep='\t', index=False)
         dockq = dockqdf.DockQ.mean()
@@ -387,7 +387,7 @@ def cal_dockq_pdb(pred_pdb_path, truth_pdb_path, pdb_id, key=None):
     # except:
     #     return None, None
     finally:
-        if not DEBUG_MODE:
+        if not debug_mode:
             shutil.rmtree(tmp_dir) 
 
 
@@ -399,7 +399,7 @@ if __name__ == '__main__':
     parser.add_argument('--key', type=str,default=None, help='output directory identifier')
     parser.add_argument('--debug_mode', action='store_true', help='it will print and save intermediate results with this mode on')
     args = parser.parse_args()
-    DEBUG_MODE = args.debug_mode
+    
 
-    dockq, rmsd = cal_dockq_pdb(args.pred_pdb_path, args.truth_pdb_path, args.pdb_id, args.key)
+    dockq, rmsd = cal_dockq_pdb(args.pred_pdb_path, args.truth_pdb_path, args.pdb_id, args.key, args.debug_mode)
     print(f'RMSD: {rmsd}\nAveraged DockQ: {dockq}')
