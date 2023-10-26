@@ -51,7 +51,7 @@ All intermediate output files can be found in `_tmp/[pdb_id]_[key]_[date-time]_[
 
 
 Note that:
-1. Ground truth chains should be saved in separate pdb files. Each pdb file should be named as '(pdb_id)_(chain_id).pdb', where chain id can be anything with any length, not necessarily consistent with chain id in prediction, such as '7URD_I_am_one_chain.pdb' and '7URD_I_am_another_chain.pdb'.
+1. Ground truth chains should be saved in separate pdb files in one directory or one pdb file. If it is in the former case, you need to provide 'pdb_id'. In addition, each pdb file include only one chain of the complex and should be named as '(pdb_id)_(chain_id).pdb', where chain id can be anything with any length, not necessarily consistent with chain id in prediction, such as '7URD_I_am_one_chain.pdb' and '7URD_I_am_another_chain.pdb'.
 
 
 # Reference
