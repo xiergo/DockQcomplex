@@ -1,5 +1,0 @@
-pdb_id	pred_i	pred_j	DockQ	irms	Lrms	fnat	nat_correct	nat_total	fnonnat	nonnat_count	model_total	chain1	chain2	len1	len2	class1	class2	truth_i	truth_j
-7URD	A	C	0.006849310925968087	17.878058259654836	72.50412580964587	0.0	0	53	1.0	5	5	A	C	432	119	receptor	ligand	./example/7URD/7URD_A_no_gap.pdb	./example/7URD/7URD_H_no_gap.pdb
-7URD	A	D	0.00546728567526347	20.082786522399783	81.14326339522711	0.0	0	32	1.0	3	3	A	D	432	107	receptor	ligand	./example/7URD/7URD_A_no_gap.pdb	./example/7URD/7URD_L_no_gap.pdb
-7URD	A	B	0.738824541451847	1.5444699118159761	2.6043993995938837	0.816901	58	71	0.348315	31	89	A	B	432	20	receptor	ligand	./example/7URD/7URD_A_no_gap.pdb	./example/7URD/7URD_B_no_gap.pdb
-7URD	C	D	0.9034974925347949	0.7431189204592346	1.1167590827743887	0.924528	49	53	0.140351	8	57	C	D	119	107	receptor	ligand	./example/7URD/7URD_H_no_gap.pdb	./example/7URD/7URD_L_no_gap.pdb
