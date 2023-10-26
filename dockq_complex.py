@@ -259,7 +259,7 @@ def cal_dockq_pdb(pred_pdb_path, truth_pdb_path, pdb_id, key=None):
                 raise ValueError('"pdb_id" should be provided when "truth_pdb_path" is a directory.')
             truth_pdbs = [i.strip() for i in os.popen(f'find {truth_pdb_path} -name {pdb_id}*pdb').readlines()]
             truth_pdbs = [i for i in truth_pdbs if not os.path.samefile(i, pred_pdb_path)]
-            truth_pdbs = [parser.get_structure('truth', i)[0].child_list[0] for i in truth_pdb]
+            truth_pdbs = [parser.get_structure('truth', i)[0].child_list[0] for i in truth_pdbs]
         
         if DEBUG_MODE:
             print(truth_pdbs)

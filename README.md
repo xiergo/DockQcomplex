@@ -44,7 +44,9 @@ optional arguments:
 
 This is an example:
 ```
-python dockq_complex.py example/7URD/relaxed_model_1_multimer_v3_pred_0.pdb example/7URD/ 7URD
+python dockq_complex.py example/7URD/relaxed_model_1_multimer_v3_pred_0.pdb example/7URD/ --pdb_id 7URD
+
+python dockq_complex.py example/7Y8U_pred.pdb example/7Y8U_truth.pdb
 ```
 
 All intermediate output files can be found in `_tmp/[pdb_id]_[key]_[date-time]_[5_digits_random_number]` in debug mode.
@@ -52,7 +54,7 @@ All intermediate output files can be found in `_tmp/[pdb_id]_[key]_[date-time]_[
 
 Note that:
 1. Ground truth chains should be saved in separate pdb files in one directory or one pdb file. If it is in the former case, you need to provide 'pdb_id'. In addition, each pdb file include only one chain of the complex and should be named as '(pdb_id)_(chain_id).pdb', where chain id can be anything with any length, not necessarily consistent with chain id in prediction, such as '7URD_I_am_one_chain.pdb' and '7URD_I_am_another_chain.pdb'.
-
+2. The chain id can not match between prediction and truth, but the residue index must stay consistent between prediction and truth. Gaps are allowed in ground truth, and will be inserted 'UNK(X)' residue placeholders automatically to make the same length between counterpart chain of prediction and truth.
 
 # Reference
 1. [DockQ: A Quality Measure for Protein-Protein Docking Models](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0161879)
