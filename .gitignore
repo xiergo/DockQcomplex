@@ -1,0 +1,14 @@
+*.tsv
+*.pdb
+*.txt
+*.ipynb
+cal_dockq*.py
+cal_dockq.py
+/test.sh
+*.list
+*.out
+
+/infer_5model
+/example
+/__pycache__
+
