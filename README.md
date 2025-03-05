@@ -1,4 +1,4 @@
-# DockQcomplex
+# EvalComplex
 Calculate DockQ for multimer, defined as the average of DockQ values for all interfaces of paired chains in contact.
 
 
@@ -7,8 +7,8 @@ The predicted chains were assigned to their nearest neighbor of the same sequenc
 
 # Installation
 ```bash
-git clone https://github.com/xiergo/DockQcomplex.git
-cd DockQcomplex/dockq
+git clone https://github.com/xiergo/EvalComplex.git
+cd EvalComplex/dockq
 sh clean.bash
 make
 cd ..
