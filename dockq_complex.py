@@ -14,6 +14,7 @@ from Bio.PDB import PDBParser
 from Bio.PDB.PDBIO import PDBIO
 from Bio.PDB.Model import Model
 from Bio.PDB.Residue import Residue
+from Bio.PDB.Chain import Chain
 from dockq.DockQ import calc_DockQ
 warnings.simplefilter('ignore', FutureWarning)
 warnings.simplefilter('ignore', BiopythonWarning)
@@ -24,8 +25,15 @@ THREE_TO_ONE ={'VAL':'V', 'ILE':'I', 'LEU':'L', 'GLU':'E', 'GLN':'Q', \
     'ARG':'R', 'LYS':'K', 'SER':'S', 'THR':'T', 'MET':'M', 'ALA':'A', \
     'GLY':'G', 'PRO':'P', 'CYS':'C', 'UNK': 'X', 'SEC': 'U', 'PYL': 'O'} # SEC 硒代半胱氨酸， PYL 吡咯赖氨酸
 
-def get_seq(chain):
-    return ''.join([THREE_TO_ONE.get(i.resname, 'X') for i in chain])
+def get_seq(obj):
+    seq = ''
+    for i in obj.get_residues():
+        if 'CA' in i:
+            seq += THREE_TO_ONE.get(i.resname, 'X')
+        else:
+            seq += 'X'
+
+    return seq
 
 
 def parse_chain(chain):
@@ -194,20 +202,18 @@ def has_contact(chain1, chain2):
 
 
 def rm_masked_res(chain, mask):
-    chain1 = chain.copy()
+    chain1 = Chain(chain.id)
     for res, m in zip(chain.child_list, mask):
-        if not m:
-            chain1.detach_child(res.id)
+        if m:
+            chain1.add(res)
     return chain1
 
+def show_model(model):
+    return [len(list(chain)) for chain in model.get_chains()]
 
-def cal_dockq_pdb(pred_pdb_path, truth_pdb_path, pdb_id=None, key=None, debug_mode=False):
-    # print(pdb_id)
-    # pred_pdb_path = f'../output_af2/{pdb_id}/relaxed_model_1_multimer_v3_pred_0.pdb'
-    # print(pred_pdb_path)
-    # if not os.path.isfile(pred_pdb_path):
-    #     print(f'{pred_pdb_path} is not found')
-    #     return None
+
+def cal_dockq_pdb(pred_pdb_path, truth_pdb_path, pdb_id=None, key=None, save_mode=False):
+
     timestr = datetime.now().strftime('%Y%m%d%H%M%S')
     if key is None:
         key = f'{timestr}_{random.randint(0, 1e4):0>5}'
@@ -240,9 +246,6 @@ def cal_dockq_pdb(pred_pdb_path, truth_pdb_path, pdb_id=None, key=None, debug_mo
             ls.append([''.join(v), len(k), k])
         df_pred = pd.DataFrame(ls, columns=['pred_cid', 'seq_len', 'pred_seq'])
         df_pred['num_chains'] = df_pred.pred_cid.map(len)
-        if debug_mode:
-            print(df_pred)
-
 
         # ground truth pdb
         # merge and rename all chains in gt
@@ -260,15 +263,10 @@ def cal_dockq_pdb(pred_pdb_path, truth_pdb_path, pdb_id=None, key=None, debug_mo
             truth_pdbs = [i.strip() for i in os.popen(f'find {truth_pdb_path} -name {pdb_id}*pdb').readlines()]
             truth_pdbs = [i for i in truth_pdbs if not os.path.samefile(i, pred_pdb_path)]
             truth_pdbs = [parser.get_structure('truth', i)[0].child_list[0] for i in truth_pdbs]
-        
-        if debug_mode:
-            print(truth_pdbs)
-            print(pred.child_list)
         assert len(truth_pdbs) == len(pred.child_list), f'The number of ground truth chains is not equal to that of prediction: {len(truth_pdbs), len(pred.child_list)}'
         
         for i, chain in enumerate(truth_pdbs):
             truth_pdb =chain.id
-            # print(truth_pdb)
             chain_id = PDB_CHAIN_IDS[i]
             truth_chain[chain_id] = chain
             seq, ca_pos, mask, heav_pos = parse_chain(chain)
@@ -287,10 +285,9 @@ def cal_dockq_pdb(pred_pdb_path, truth_pdb_path, pdb_id=None, key=None, debug_mo
         df = pd.DataFrame(ls, columns=df_pred.columns.tolist() + ['truth_cid', 'truth_path', 'truth_seq', 'mask']) 
         df['true_seq_len'] = df['mask'].map(np.sum)
         df = df.sort_values(by=['num_chains', 'true_seq_len'], ascending=[True, False])
-        if debug_mode:
-            print(df)
+        print(df.to_string())
         df = df[['pred_cid', 'seq_len', 'num_chains', 'truth_cid', 'true_seq_len', 'truth_path', 'pred_seq', 'truth_seq']]
-        if debug_mode:
+        if save_mode:
             df.to_csv(f'{tmp_dir}/{pdb_id}_info.tsv', sep='\t', index=False)
 
         truth_cids = df.truth_cid
@@ -313,7 +310,7 @@ def cal_dockq_pdb(pred_pdb_path, truth_pdb_path, pdb_id=None, key=None, debug_mo
             pm = find_optimal_permutation(x_mean_pred, x_mean_truth)
             # rmsd = cal_rmsd(x_mean_truth, x_mean_pred[pm, range(len(pm))])
             rmsd = cal_ca_kabsch_rmsd(pred_ca, truth_ca, truth_cids, pm)
-            # print(anchor_truth, anchor_pred, pm, rmsd)
+            print([anchor_truth, anchor_pred, pm, rmsd])
             if rmsd < rmsd_min:
                 rmsd_min = rmsd
                 pm_best = pm
@@ -322,11 +319,9 @@ def cal_dockq_pdb(pred_pdb_path, truth_pdb_path, pdb_id=None, key=None, debug_mo
         match_table = {}
         for cid_t, cid_p in zip(truth_cids, np.array(list(pred_ca.keys()))[pm_best]):
             cids_p = df.pred_cid[df.truth_cid == cid_t].values[0]
-            # print(cid_t, cid_p, cids_p)
-            # print(cid_p in cids_p)
             assert cid_p in cids_p, (cid_p, cids_p)
             match_table[cid_t] = cid_p
-        if debug_mode:
+        if save_mode:
             with open(f'{tmp_dir}/{pdb_id}_match_table.tsv', 'w') as f:
                 f.writelines([f'{df.truth_path[df.truth_cid == k].values[0]}\t{v}\n' for k, v in match_table.items()])
 
@@ -361,6 +356,8 @@ def cal_dockq_pdb(pred_pdb_path, truth_pdb_path, pdb_id=None, key=None, debug_mo
                 model_t.add(rm_masked_res(chain_j, mask_j))
                 io.set_structure(model_t)
                 io.save(file_truth)
+                print(f'seq len for chain {cid_ti} and {cid_tj}: {show_model(model_t)} (truth), {show_model(model_p)} (pred)')
+                assert get_seq(model_t) == get_seq(model_p), f'\n{get_seq(model_t)}\n{get_seq(model_p)}\n'
                 info = calc_DockQ(file_pred, file_truth)
                 info['pdb_id'] = pdb_id
                 info['pred_i'] = cid_pi
@@ -375,8 +372,8 @@ def cal_dockq_pdb(pred_pdb_path, truth_pdb_path, pdb_id=None, key=None, debug_mo
         dockqdf = pd.concat(dockqls, axis=0)
         cols = ['pdb_id', 'pred_i', 'pred_j', 'DockQ', 'irms', 'Lrms', 'fnat', 'nat_correct', 'nat_total', 'fnonnat', 'nonnat_count', 'model_total', 'chain1', 'chain2', 'len1', 'len2', 'class1', 'class2', 'truth_i', 'truth_j']
         dockqdf = dockqdf[cols]
-        if debug_mode:
-            print(dockqdf)
+        print(dockqdf.to_string())
+        if save_mode:
             dockqdf.to_csv(f'{tmp_dir}/{pdb_id}_dockq_info.tsv', sep='\t', index=False)
         dockq = dockqdf.DockQ.mean()
         dockq = round(dockq, 5)
@@ -385,7 +382,7 @@ def cal_dockq_pdb(pred_pdb_path, truth_pdb_path, pdb_id=None, key=None, debug_mo
     # except:
     #     return None, None
     finally:
-        if not debug_mode:
+        if not save_mode:
             shutil.rmtree(tmp_dir) 
 
 
@@ -395,9 +392,9 @@ if __name__ == '__main__':
     parser.add_argument('truth_pdb_path', type=str, help='a directory containing all ground truth pdb files, with each file corresponding to one chain, or it can also be a pdb file consisting of all chains')
     parser.add_argument('--pdb_id', type=str, default=None, help='PDB id, if "truth_pdb_path" is a directory, all files in "truth_pdb_path" with the pattern "pdb_id***pdb" (excluding pred_pdb_path) will be recognized as ground truth pdbs')
     parser.add_argument('--key', type=str,default=None, help='output directory identifier')
-    parser.add_argument('--debug_mode', action='store_true', help='it will print and save intermediate results with this mode on')
+    parser.add_argument('--save_mode', action='store_true', help='it will save intermediate results with this mode on')
     args = parser.parse_args()
     
 
-    dockq, rmsd = cal_dockq_pdb(args.pred_pdb_path, args.truth_pdb_path, args.pdb_id, args.key, args.debug_mode)
+    dockq, rmsd = cal_dockq_pdb(args.pred_pdb_path, args.truth_pdb_path, args.pdb_id, args.key, args.save_mode)
     print(f'RMSD: {rmsd}\nAveraged DockQ: {dockq}')

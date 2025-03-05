@@ -1,0 +1,16 @@
+*.tsv
+*.pdb
+*.txt
+*.ipynb
+*.list
+*.out
+cal_dockq*.py
+add_gap_pdb.py
+test.sh
+dockq.sh
+/infer_5model/
+# /example/
+/__pycache__/
+/_tmp/
+dockq/__pycache__
+
